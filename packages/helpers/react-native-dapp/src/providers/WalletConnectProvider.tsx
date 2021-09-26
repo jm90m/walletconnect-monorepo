@@ -141,38 +141,38 @@ export default function WalletConnectProvider({
         await storage.getItem(sessionStorageKey),
         await storage.getItem(walletServiceStorageKey),
       ]);
-  
+
       const isResumable = !!maybeExistingSession && (
         // Android does not inherently "know" the provider.
         // (This information is obscured by the BottomSheet.)
         Platform.OS === 'android' || !!maybeExistingWalletService
       );
-  
+
       if (!isResumable) {
         await Promise.all([
           storage.removeItem(sessionStorageKey),
           storage.removeItem(walletServiceStorageKey),
         ]);
       }
-  
+
       const nextConnector = new WalletConnect({
         session: isResumable ? maybeExistingSession as IWalletConnectSession : undefined,
         qrcodeModal,
         ...extras,
       });
-  
+
       const maybeThrowError = (error?: unknown) => {
         if (error) {
           // eslint-disable-next-line functional/no-throw-statement
           throw error;
         }
       };
-  
+
       nextConnector.on(ConnectorEvents.CONNECT, async (error: unknown) => {
         maybeThrowError(error);
         await storage.setItem(sessionStorageKey, nextConnector.session);
       });
-    
+
       nextConnector.on(ConnectorEvents.CALL_REQUEST_SENT, async (error: unknown) => {
         maybeThrowError(error);
         if (Platform.OS === 'android') {
@@ -199,21 +199,21 @@ export default function WalletConnectProvider({
           Linking.openURL('wc:');
         } else if (Platform.OS !== 'web') {
           const walletService: WalletService | undefined = await storage.getItem(walletServiceStorageKey);
-  
+
           if (!walletService) {
             return maybeThrowError(new Error('Cached WalletService not found.'));
           }
-  
+
           const url = formatWalletServiceUrl(walletService);
           return (await Linking.canOpenURL(url)) && Linking.openURL(url);
         }
       });
-    
+
       nextConnector.on(ConnectorEvents.SESSION_UPDATE, async (error: unknown) => {
         maybeThrowError(error);
         await storage.setItem(sessionStorageKey, nextConnector.session);
       });
-  
+
       nextConnector.on(ConnectorEvents.DISCONNECT, async (error: unknown) => {
         await Promise.all([
           storage.setItem(sessionStorageKey, undefined),
@@ -222,7 +222,7 @@ export default function WalletConnectProvider({
         setConnector(await shouldCreateConnector(params)); /* wc_repeat */
         maybeThrowError(error);
       });
-  
+
       return nextConnector;
     },
     [
@@ -271,6 +271,7 @@ export default function WalletConnectProvider({
         connectToWalletService,
         connector: Object.assign(Object.create(connector), {
           ...connector,
+          connectToWalletService,
           connect: async (opts?: ICreateSessionOptions) => {
             if (!walletServices.length) {
               // eslint-disable-next-line functional/no-throw-statement
@@ -281,7 +282,7 @@ export default function WalletConnectProvider({
             }
             const nextConnector = await createConnector(intermediateValue);
             setConnector(nextConnector);
-            return nextConnector.connect(opts);
+            return nextConnector;
           },
         } as WalletConnect),
       }
