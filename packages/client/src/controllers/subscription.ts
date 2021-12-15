@@ -62,7 +62,7 @@ export class SubscriptionTopicMap implements ISubscriptionTopicMap {
   }
 }
 
-export class Subscription extends ISubscription {
+export class Subscription {
   public subscriptions = new Map<string, SubscriptionParams>();
 
   public topicMap = new SubscriptionTopicMap();
@@ -74,7 +74,6 @@ export class Subscription extends ISubscription {
   private cached: SubscriptionParams[] = [];
 
   constructor(public client: IClient, public logger: Logger) {
-    super(client, logger);
     this.logger = generateChildLogger(logger, this.name);
     this.registerEventListeners();
   }

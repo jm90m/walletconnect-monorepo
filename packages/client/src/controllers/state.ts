@@ -6,7 +6,7 @@ import { ERROR, formatMessageContext } from "@walletconnect/utils";
 import { STATE_EVENTS } from "../constants";
 import { generateChildLogger, getLoggerContext } from "@walletconnect/logger";
 
-export class State<Sequence = any> extends IState<Sequence> {
+export class State<Sequence = any> {
   public sequences = new Map<string, Sequence>();
 
   public events = new EventEmitter();
@@ -14,7 +14,6 @@ export class State<Sequence = any> extends IState<Sequence> {
   private cached: Sequence[] = [];
 
   constructor(public client: IClient, public logger: Logger, public name: string) {
-    super(client, logger, name);
     this.logger = generateChildLogger(logger, this.name);
 
     this.registerEventListeners();
